@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+
+{% block title %}Camera Attendance{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2 class="mb-3">Camera-Based Attendance</h2>
+            <p class="text-muted">Use facial recognition to mark attendance automatically.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Capture Attendance</h5>
+                </div>
+                <div class="card-body">
+                    {% if fr_available is defined and not fr_available %}
+                    <div class="alert alert-warning mb-3">Face recognition libraries are not available in the server environment. Activate the project's `venv` and install requirements to enable this feature.</div>
+                    {% endif %}
+                    <p>Click the button below to start the camera and capture attendance.</p>
+                    <p class="text-muted small">The system will recognize registered employees and mark them present automatically.</p>
+                    
+                    <form method="POST" action="{{ url_for('ai.camera_attendance') }}">
+                        <button type="submit" name="capture" id="start-auto" class="btn btn-primary btn-lg w-100" {% if not fr_available %}disabled{% endif %}>
+                            <i class="fas fa-camera me-2"></i> Start Camera Attendance
+                        </button>
+                    </form>
+
+                    <hr class="my-4">
+
+                    <div class="d-grid gap-2">
+                        <button id="start-webcam" class="btn btn-outline-primary" {% if not fr_available %}disabled{% endif %}>
+                            <i class="fas fa-video me-2"></i> Start Webcam (Browser)
+                        </button>
+                        <button id="snap-send" class="btn btn-success" disabled>
+                            <i class="fas fa-paper-plane me-2"></i> Capture & Send to Server
+                        </button>
+                    </div>
+                    <div class="mt-3">
+                        <video id="video" width="100%" autoplay playsinline style="display:none"></video>
+                        <canvas id="canvas" style="display:none"></canvas>
+                        <div id="api-result" class="mt-2 text-muted small"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Register Face</h5>
+                </div>
+                <div class="card-body">
+                    <p>Upload an employee's photo to register their face for recognition.</p>
+                    
+                    <form method="POST" action="{{ url_for('ai.camera_attendance') }}" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="employee_id" class="form-label">Employee ID</label>
+                            <input type="text" class="form-control" id="employee_id" name="employee_id" required>
+                            <div class="form-text">Enter the MongoDB ObjectID of the employee</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="face_image" class="form-label">Face Image</label>
+                            <input type="file" class="form-control" id="face_image" name="face_image" accept="image/*" required>
+                            <div class="form-text">Upload a clear front-facing photo</div>
+                        </div>
+                        
+                        <button type="submit" name="upload" class="btn btn-secondary w-100">
+                            <i class="fas fa-upload me-2"></i> Register Face
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">How It Works</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="p-3 rounded-circle bg-light d-inline-block mb-2">
+                                <i class="fas fa-camera fa-2x text-primary"></i>
+                            </div>
+                            <h5>Step 1: Capture</h5>
+                            <p class="small">The system captures your face using the webcam</p>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="p-3 rounded-circle bg-light d-inline-block mb-2">
+                                <i class="fas fa-fingerprint fa-2x text-primary"></i>
+                            </div>
+                            <h5>Step 2: Recognize</h5>
+                            <p class="small">Your face is matched against registered employees</p>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="p-3 rounded-circle bg-light d-inline-block mb-2">
+                                <i class="fas fa-check-circle fa-2x text-primary"></i>
+                            </div>
+                            <h5>Step 3: Mark Attendance</h5>
+                            <p class="small">Attendance is automatically recorded in the system</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+    const startBtn = document.getElementById('start-webcam');
+    const snapBtn = document.getElementById('snap-send');
+    const startAutoBtn = document.getElementById('start-auto');
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const resultDiv = document.getElementById('api-result');
+    const frAvailable = {{ 'true' if fr_available else 'false' }};
+
+    if (!startBtn || !snapBtn) return;
+
+    let stream = null;
+
+    startBtn.addEventListener('click', async () => {
+        if (!frAvailable) { resultDiv.textContent = 'Face recognition is not available in the server environment.'; return; }
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+            video.style.display = 'block';
+            snapBtn.disabled = false;
+        } catch (err) {
+            resultDiv.textContent = 'Error starting webcam: ' + err.message;
+        }
+    });
+
+    // Auto mode: intercept form submit and capture frames until recognized
+    if (startAutoBtn) {
+        startAutoBtn.addEventListener('click', async (e) => {
+            if (!frAvailable) return;
+            e.preventDefault();
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                video.style.display = 'block';
+                resultDiv.textContent = 'Starting auto capture...';
+
+                const sendFrame = async () => {
+                    const width = video.videoWidth || 640;
+                    const height = video.videoHeight || 480;
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(video, 0, 0, width, height);
+                    const dataUrl = canvas.toDataURL('image/jpeg');
+                    const res = await fetch('{{ url_for('ai.camera_attendance_api') }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ image: dataUrl })
+                    });
+                    const json = await res.json();
+                    if (json.success && json.details && json.details.count > 0) {
+                        resultDiv.textContent = json.message + ' | ' + JSON.stringify(json.details.recognized);
+                        try { stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+                        video.style.display = 'none';
+                        return true;
+                    } else {
+                        resultDiv.textContent = 'Scanning... ' + (json.message || '');
+                        return false;
+                    }
+                };
+
+                // Try up to 10 frames, 1 per second
+                for (let i = 0; i < 10; i++) {
+                    const done = await sendFrame();
+                    if (done) break;
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+            } catch (err) {
+                resultDiv.textContent = 'Auto capture failed: ' + err.message;
+            }
+        });
+    }
+
+    snapBtn.addEventListener('click', async () => {
+        if (!stream) { resultDiv.textContent = 'Please start webcam first.'; return; }
+        const width = video.videoWidth || 640;
+        const height = video.videoHeight || 480;
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL('image/jpeg');
+
+        try {
+            const res = await fetch('{{ url_for('ai.camera_attendance_api') }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: dataUrl })
+            });
+            const json = await res.json();
+            if (json.success) {
+                resultDiv.textContent = json.message + (json.details && json.details.recognized ? ' | ' + JSON.stringify(json.details.recognized) : '');
+            } else {
+                resultDiv.textContent = 'Error: ' + json.message;
+            }
+        } catch (e) {
+            resultDiv.textContent = 'Request failed: ' + e.message;
+        }
+    });
+})();
+</script>
+{% endblock %}

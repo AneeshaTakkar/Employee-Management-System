@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+
+{% block title %}Employee Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Welcome, {{ employee.name }}</h2>
+        <div>
+            <span class="badge bg-info p-2">Employee</span>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Attendance</h5>
+                    <p class="card-text">{{ attendance|length if attendance else 0 }} days</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Leave Applications</h5>
+                    <p class="card-text">{{ leaves|length if leaves else 0 }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Join Date</h5>
+                    <p class="card-text">{{ employee.join_date if employee.join_date else 'N/A' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card mb-4">
+        <!--
+        @description: Container for quick actions.
+        @type {HTMLElement}
+        -->
+        <div class="card-header bg-light">
+            <h4 class="mb-0">Quick Actions</h4>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <a href="{{ url_for('employee.employee_profile') }}" class="btn btn-info w-100 d-flex align-items-center justify-content-center gap-2 py-3">
+                        <i class="fas fa-user"></i>
+                        <span>View Profile</span>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{{ url_for('employee.mark_attendance') }}" class="btn btn-success w-100 d-flex align-items-center justify-content-center gap-2 py-3">
+                        <i class="fas fa-clipboard-check"></i>
+                        <span>Mark Attendance</span>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{{ url_for('employee.apply_leave_route') }}" class="btn btn-warning w-100 d-flex align-items-center justify-content-center gap-2 py-3">
+                        <i class="fas fa-calendar-plus"></i>
+                        <span>Apply Leave</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- AI Features Section -->
+            <div class="mt-4">
+                <h5 class="mb-3"><i class="fas fa-robot text-primary"></i> AI-Powered Features</h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <a href="{{ url_for('ai.camera_attendance') }}" class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2 py-2">
+                            <i class="fas fa-camera"></i>
+                            <span>Camera Attendance</span>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ url_for('ai.leave_prediction') }}" class="btn btn-outline-warning w-100 d-flex align-items-center justify-content-center gap-2 py-2">
+                            <i class="fas fa-calendar-check"></i>
+                            <span>Leave Prediction</span>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ url_for('ai.hr_chatbot') }}" class="btn btn-outline-info w-100 d-flex align-items-center justify-content-center gap-2 py-2">
+                            <i class="fas fa-comments"></i>
+                            <span>HR Chatbot</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance & Leave Records -->
+    <div class="row g-4">
+        <!-- Attendance Records -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Attendance Records</h4>
+                    <span class="badge bg-success">{{ attendance|length if attendance else 0 }} Days</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in attendance %}
+                                <tr>
+                                    <td>{{ record.date }}</td>
+                                    <td>
+                                        <span class="badge bg-success">{{ record.status }}</span>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="2" class="text-center py-4">
+                                        <div class="py-4">
+                                            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                                            <h5>No attendance records</h5>
+                                            <p class="text-muted">Your attendance will appear here</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leave Applications -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Leave Applications</h4>
+                    <a href="{{ url_for('employee.apply_leave_route') }}" class="btn btn-sm btn-outline-primary">Apply New</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Reason</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for leave in leaves %}
+                                <tr>
+                                    <td>{{ leave.date }}</td>
+                                    <td>{{ leave.reason }}</td>
+                                    <td>
+                                        {% if leave.status == 'Approved' %}
+                                        <span class="badge bg-success">Approved</span>
+                                        {% elif leave.status == 'Rejected' %}
+                                        <span class="badge bg-danger">Rejected</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-4">
+                                        <div class="py-4">
+                                            <i class="fas fa-calendar-plus fa-3x text-muted mb-3"></i>
+                                            <h5>No leave applications</h5>
+                                            <p class="text-muted">Your leave applications will appear here</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

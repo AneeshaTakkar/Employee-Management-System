@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% block title %}Manage Attendance{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Manage Attendance</h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Attendance</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Attendance Records</h4>
+            <div>
+                <button class="btn btn-outline-primary me-2" id="exportBtn">
+                    <i class="fas fa-file-export me-2"></i>Export
+                </button>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#filterModal">
+                    <i class="fas fa-filter me-2"></i>Filter
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Time</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in attendance %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle-sm me-2">
+                                        <span class="avatar-initials-sm">{{ entry.name[:2].upper() if entry.name else entry.email[:2].upper() }}</span>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">{{ entry.name if entry.name else 'N/A' }}</h6>
+                                        <small class="text-muted">{{ entry.email }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ entry.date }}</td>
+                            <td>
+                                {% if entry.status == 'Present' %}
+                                <span class="badge bg-success">Present</span>
+                                {% elif entry.status == 'Absent' %}
+                                <span class="badge bg-danger">Absent</span>
+                                {% elif entry.status == 'Work From Home' %}
+                                <span class="badge bg-info">WFH</span>
+                                {% elif entry.status == 'On Leave' %}
+                                <span class="badge bg-warning">On Leave</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ entry.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ entry.time if entry.time else 'N/A' }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <div class="py-4">
+                                    <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                                    <h5>No attendance records found</h5>
+                                    <p class="text-muted">Attendance records will appear here</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Modal -->
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="filterModalLabel">Filter Attendance</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="filterForm">
+                    <div class="mb-3">
+                        <label for="employeeFilter" class="form-label">Employee</label>
+                        <select class="form-select" id="employeeFilter" name="employee">
+                            <option value="">All Employees</option>
+                            <!-- Add employee options dynamically -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="statusFilter" class="form-label">Status</label>
+                        <select class="form-select" id="statusFilter" name="status">
+                            <option value="">All Statuses</option>
+                            <option value="Present">Present</option>
+                            <option value="Absent">Absent</option>
+                            <option value="Work From Home">Work From Home</option>
+                            <option value="On Leave">On Leave</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="fromDate" class="form-label">From Date</label>
+                                <input type="date" class="form-control" id="fromDate" name="fromDate">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="toDate" class="form-label">To Date</label>
+                                <input type="date" class="form-control" id="toDate" name="toDate">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary">Apply Filters</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+    .avatar-circle-sm {
+        width: 36px;
+        height: 36px;
+        background-color: var(--primary-color);
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .avatar-initials-sm {
+        color: white;
+        font-size: 14px;
+        font-weight: bold;
+        line-height: 1;
+    }
+</style>
+{% endblock %}
+{% endblock %}

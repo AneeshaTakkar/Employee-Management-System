@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Admin Dashboard</h2>
+        <div>
+            <span class="badge bg-primary p-2">Admin</span>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="stat-card primary">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-value">{{ total_employees }}</div>
+                <div class="stat-label">Total Employees</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card success">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="stat-value">{{ total_attendance }}</div>
+                <div class="stat-label">Attendance Records</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card warning">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div class="stat-value">{{ total_leaves }}</div>
+                <div class="stat-label">Leave Applications</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card mb-5">
+        <div class="card-header">
+            <h4 class="mb-0">Quick Actions</h4>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <a href="{{ url_for('admin.manage_employees') }}" class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2 py-3">
+                        <i class="fas fa-user-cog"></i>
+                        <span>Manage Employees</span>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{{ url_for('admin.manage_attendance') }}" class="btn btn-success w-100 d-flex align-items-center justify-content-center gap-2 py-3">
+                        <i class="fas fa-clipboard-check"></i>
+                        <span>Manage Attendance</span>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{{ url_for('admin.manage_leaves') }}" class="btn btn-warning w-100 d-flex align-items-center justify-content-center gap-2 py-3">
+                        <i class="fas fa-calendar-week"></i>
+                        <span>Manage Leaves</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- AI Features Section -->
+            <div class="mt-4">
+                <h5 class="mb-3"><i class="fas text-primary"></i> AI-Powered Features</h5>
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <a href="{{ url_for('ai.camera_attendance') }}" class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2 py-2">
+                            <i class="fas fa-camera"></i>
+                            <span>Camera Attendance</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('ai.attrition_prediction') }}" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2 py-2">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Attrition Prediction</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('ai.hr_chatbot') }}" class="btn btn-outline-info w-100 d-flex align-items-center justify-content-center gap-2 py-2">
+                            <i class="fas fa-comments"></i>
+                            <span>HR Chatbot</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('ai.initialize_demo') }}" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2 py-2">
+                            <i class="fas fa-database"></i>
+                            <span>Initialize AI Data</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Leave Applications -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Recent Leave Applications</h4>
+            <a href="{{ url_for('admin.manage_leaves') }}" class="btn btn-sm btn-outline-primary">View All</a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Date</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for leave in all_leaves %}
+                        <tr>
+                            <td>{{ leave.email }}</td>
+                            <td>{{ leave.date }}</td>
+                            <td>{{ leave.reason }}</td>
+                            <td>
+                                {% if leave.status == 'Approved' %}
+                                <span class="badge bg-success">Approved</span>
+                                {% elif leave.status == 'Rejected' %}
+                                <span class="badge bg-danger">Rejected</span>
+                                {% else %}
+                                <span class="badge bg-warning">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-success btn-sm">Approve</button>
+                                    <button class="btn btn-danger btn-sm">Reject</button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <div class="py-5">
+                                    <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                                    <h5>No leave applications</h5>
+                                    <p class="text-muted">Leave applications will appear here</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}Employee Attrition Prediction{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2 class="mb-3">Employee Attrition Risk Prediction</h2>
+            <p class="text-muted">Predict which employees are at risk of leaving the organization.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Predict Attrition Risk</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('ai.attrition_prediction') }}">
+                        <div class="mb-3">
+                            <label for="employee_id" class="form-label">Select Employee</label>
+                            <select class="form-select" id="employee_id" name="employee_id" required>
+                                <option value="" selected disabled>Choose an employee</option>
+                                {% for emp in employees %}
+                                <option value="{{ emp._id }}">{{ emp.name }} ({{ emp.department }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="experience" class="form-label">Experience (years)</label>
+                            <input type="number" class="form-control" id="experience" name="experience" min="0.5" max="30" step="0.5" value="3" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="salary" class="form-label">Annual Salary (₹)</label>
+                            <input type="number" class="form-control" id="salary" name="salary" min="300000" max="5000000" step="50000" value="800000" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="performance_score" class="form-label">Performance Score (2.0-5.0)</label>
+                            <input type="number" class="form-control" id="performance_score" name="performance_score" min="2.0" max="5.0" step="0.1" value="3.5" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="leaves_taken" class="form-label">Leaves Taken (Last Year)</label>
+                            <input type="number" class="form-control" id="leaves_taken" name="leaves_taken" min="0" max="50" value="10" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="overtime_hours" class="form-label">Overtime Hours (Monthly Average)</label>
+                            <input type="number" class="form-control" id="overtime_hours" name="overtime_hours" min="0" max="100" value="20" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="project_completion" class="form-label">Project Completion Rate (0.7-1.0)</label>
+                            <input type="number" class="form-control" id="project_completion" name="project_completion" min="0.7" max="1.0" step="0.05" value="0.85" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="satisfaction_score" class="form-label">Satisfaction Score (1.0-5.0)</label>
+                            <input type="number" class="form-control" id="satisfaction_score" name="satisfaction_score" min="1.0" max="5.0" step="0.1" value="3.5" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-robot me-2"></i> Predict Attrition Risk
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            {% if prediction %}
+            <div class="card mb-4">
+                <div class="card-header {% if prediction == 'High Risk' %}bg-danger{% else %}bg-success{% endif %} text-white">
+                    <h5 class="mb-0">Prediction Result for {{ employee.name }}</h5>
+                </div>
+                <div class="card-body text-center py-4">
+                    <div class="display-1 mb-3">
+                        {% if prediction == 'High Risk' %}
+                        <i class="fas fa-exclamation-triangle text-danger"></i>
+                        {% else %}
+                        <i class="fas fa-shield-alt text-success"></i>
+                        {% endif %}
+                    </div>
+                    <h3 class="mb-3">{{ prediction }}</h3>
+                    <p class="lead">Attrition Probability: {{ (probability * 100)|round(1) }}%</p>
+                    
+                    <div class="progress mt-3">
+                        <div class="progress-bar {% if prediction == 'High Risk' %}bg-danger{% else %}bg-success{% endif %}" 
+                             role="progressbar" 
+                             style="width: {{ (probability * 100)|round(1) }}%" 
+                             aria-valuenow="{{ (probability * 100)|round(1) }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                            {{ (probability * 100)|round(1) }}%
+                        </div>
+                    </div>
+                    
+                    {% if prediction == 'High Risk' %}
+                    <div class="mt-4">
+                        <div class="alert alert-danger">
+                            <h5><i class="fas fa-lightbulb me-2"></i> Recommended Actions</h5>
+                            <ul class="list-unstyled text-start">
+                                <li><i class="fas fa-check me-2"></i> Schedule a one-on-one meeting</li>
+                                <li><i class="fas fa-check me-2"></i> Review compensation package</li>
+                                <li><i class="fas fa-check me-2"></i> Discuss career growth opportunities</li>
+                                <li><i class="fas fa-check me-2"></i> Address work-life balance concerns</li>
+                                <li><i class="fas fa-check me-2"></i> Consider role adjustments or new challenges</li>
+                            </ul>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">How It Works</h5>
+                </div>
+                <div class="card-body">
+                    <p>Our AI model analyzes several factors to predict employee attrition risk:</p>
+                    
+                    <ul class="list-group list-group-flush mb-3">
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="fas fa-briefcase text-primary me-3"></i>
+                            <div>
+                                <strong>Experience</strong>
+                                <div class="small text-muted">Employees with very low or very high experience may have different risk profiles</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="fas fa-rupee-sign text-primary me-3"></i>
+                            <div>
+                                <strong>Salary</strong>
+                                <div class="small text-muted">Compensation relative to market rates affects retention</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="fas fa-chart-line text-primary me-3"></i>
+                            <div>
+                                <strong>Performance</strong>
+                                <div class="small text-muted">Both high and low performers may have attrition risks for different reasons</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="fas fa-clock text-primary me-3"></i>
+                            <div>
+                                <strong>Overtime</strong>
+                                <div class="small text-muted">Excessive overtime may indicate burnout risk</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="fas fa-smile text-primary me-3"></i>
+                            <div>
+                                <strong>Satisfaction</strong>
+                                <div class="small text-muted">Employee satisfaction is a key indicator of retention</div>
+                            </div>
+                        </li>
+                    </ul>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> This prediction is based on patterns in employee data and is meant to help HR take proactive retention measures. Individual circumstances may vary.
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

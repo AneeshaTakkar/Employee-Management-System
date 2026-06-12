@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}Leave Approval Prediction{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2 class="mb-3">AI Leave Approval Prediction</h2>
+            <p class="text-muted">Get an AI-powered prediction on your leave approval chances before submitting.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Predict Leave Approval</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('ai.leave_prediction') }}">
+                        <div class="mb-3">
+                            <label for="duration" class="form-label">Leave Duration (days)</label>
+                            <input type="number" class="form-control" id="duration" name="duration" min="1" max="30" value="1" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="leaves_taken" class="form-label">Leaves Taken Last Month</label>
+                            <input type="number" class="form-control" id="leaves_taken" name="leaves_taken" min="0" max="30" value="0" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="performance_score" class="form-label">Your Performance Score (2.0-5.0)</label>
+                            <input type="number" class="form-control" id="performance_score" name="performance_score" min="2.0" max="5.0" step="0.1" value="3.5" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="department" class="form-label">Department</label>
+                            <select class="form-select" id="department" name="department" required>
+                                <option value="HR">HR</option>
+                                <option value="IT" selected>IT</option>
+                                <option value="Finance">Finance</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Operations">Operations</option>
+                                <option value="Sales">Sales</option>
+                                <option value="Engineering">Engineering</option>
+                                <option value="Customer Support">Customer Support</option>
+                                <option value="Administration">Administration</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="emergency" name="emergency">
+                            <label class="form-check-label" for="emergency">Emergency Leave</label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-robot me-2"></i> Predict Approval Chances
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            {% if prediction %}
+            <div class="card mb-4">
+                <div class="card-header {% if prediction == 'Likely Approved' %}bg-success{% else %}bg-danger{% endif %} text-white">
+                    <h5 class="mb-0">Prediction Result</h5>
+                </div>
+                <div class="card-body text-center py-4">
+                    <div class="display-1 mb-3">
+                        {% if prediction == 'Likely Approved' %}
+                        <i class="fas fa-check-circle text-success"></i>
+                        {% else %}
+                        <i class="fas fa-times-circle text-danger"></i>
+                        {% endif %}
+                    </div>
+                    <h3 class="mb-3">{{ prediction }}</h3>
+                    <p class="lead">Approval Probability: {{ (probability * 100)|round(1) }}%</p>
+                    
+                    <div class="progress mt-3">
+                        <div class="progress-bar {% if prediction == 'Likely Approved' %}bg-success{% else %}bg-danger{% endif %}" 
+                             role="progressbar" 
+                             style="width: {{ (probability * 100)|round(1) if probability else 0 }}%" 
+                             aria-valuenow="{{ (probability * 100)|round(1) if probability else 0 }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                             {{ (probability * 100)|round(1) if probability else 0 }}%
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="{{ url_for('employee.apply_leave_route') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-paper-plane me-2"></i> Proceed to Leave Application
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">How It Works</h5>
+                </div>
+                <div class="card-body">
+                    <p>Our AI model analyzes several factors to predict leave approval:</p>
+                    
+                    <ul class="list-group list-group-flush mb-3">
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="fas fa-calendar-alt text-primary me-3"></i>
+                            <div>
+                                <strong>Leave Duration</strong>
+                                <div class="small text-muted">Shorter leaves have higher approval chances</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="fas fa-history text-primary me-3"></i>
+                            <div>
+                                <strong>Recent Leave History</strong>
+                                <div class="small text-muted">Fewer recent leaves improve chances</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="fas fa-chart-line text-primary me-3"></i>
+                            <div>
+                                <strong>Performance Score</strong>
+                                <div class="small text-muted">Higher performers get more flexibility</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="fas fa-building text-primary me-3"></i>
+                            <div>
+                                <strong>Department</strong>
+                                <div class="small text-muted">Different departments have different approval patterns</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="fas fa-exclamation-triangle text-primary me-3"></i>
+                            <div>
+                                <strong>Emergency Status</strong>
+                                <div class="small text-muted">Emergency leaves have higher priority</div>
+                            </div>
+                        </li>
+                    </ul>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> This prediction is based on historical patterns and is meant to guide your decision. The final approval depends on your manager's discretion.
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

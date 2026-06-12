@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% block title %}Apply for Leave{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Leave Application</h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ url_for('employee.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Apply Leave</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h4 class="mb-0">New Leave Request</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="from_date" class="form-label">From Date</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-calendar-day"></i></span>
+                                        <input type="date" class="form-control" id="from_date" name="from_date" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="to_date" class="form-label">To Date</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-calendar-day"></i></span>
+                                        <input type="date" class="form-control" id="to_date" name="to_date" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="leave_type" class="form-label">Leave Type</label>
+                                    <select class="form-select" id="leave_type" name="leave_type" required>
+                                        <option value="" selected disabled>Select leave type</option>
+                                        <option value="Sick Leave">Sick Leave</option>
+                                        <option value="Casual Leave">Casual Leave</option>
+                                        <option value="Annual Leave">Annual Leave</option>
+                                        <option value="Maternity/Paternity Leave">Maternity/Paternity Leave</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="reason" class="form-label">Reason</label>
+                                    <textarea class="form-control" id="reason" name="reason" rows="4" placeholder="Please provide details about your leave request..." required></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="emergency" name="emergency">
+                                    <label class="form-check-label" for="emergency">
+                                        This is an emergency leave request
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button type="reset" class="btn btn-outline-secondary">Reset</button>
+                                    <button type="submit" class="btn btn-primary">Submit Leave Request</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0">Leave Balance</h4>
+                </div>
+                <div class="card-body">
+                    <div class="leave-balance-item">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Sick Leave</span>
+                            <span class="badge bg-primary">10 days</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: 70%" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    <div class="leave-balance-item mt-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Casual Leave</span>
+                            <span class="badge bg-success">15 days</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 90%" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    <div class="leave-balance-item mt-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Annual Leave</span>
+                            <span class="badge bg-warning">5 days</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 30%" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h4 class="mb-0">Leave Policy</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="policy-list">
+                        <li>Leave requests must be submitted at least 3 days in advance</li>
+                        <li>Emergency leaves require manager approval</li>
+                        <li>Maximum consecutive leave days: 15</li>
+                        <li>Unused annual leaves can be carried forward</li>
+                    </ul>
+                    <a href="#" class="btn btn-sm btn-outline-primary w-100 mt-2">View Full Policy</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Calculate days between dates
+        const fromDateInput = document.getElementById('from_date');
+        const toDateInput = document.getElementById('to_date');
+        
+        function updateDates() {
+            const fromDate = new Date(fromDateInput.value);
+            const toDate = new Date(toDateInput.value);
+            
+            if (fromDate > toDate) {
+                toDateInput.value = fromDateInput.value;
+            }
+        }
+        
+        fromDateInput.addEventListener('change', updateDates);
+        toDateInput.addEventListener('change', function() {
+            const fromDate = new Date(fromDateInput.value);
+            const toDate = new Date(toDateInput.value);
+            
+            if (fromDate > toDate) {
+                fromDateInput.value = toDateInput.value;
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .leave-balance-item {
+        padding: 0.5rem 0;
+    }
+    
+    .policy-list {
+        padding-left: 1.5rem;
+        margin-bottom: 0;
+    }
+    
+    .policy-list li {
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}

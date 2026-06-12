@@ -1,0 +1,395 @@
+{% extends 'base.html' %}
+{% block title %}Public Dashboard{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container text-center">
+        <div class="hero-content">
+            <h1 class="hero-title">Welcome to <span class="text-primary">Employee Management System</span></h1>
+            <p class="hero-subtitle">A streamlined solution for managing workplace resources</p>
+            <div class="hero-buttons">
+                <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg shadow-hover"><i class="fas fa-sign-in-alt me-2"></i>Employee Login</a>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-outline-light btn-lg shadow-hover"><i class="fas fa-user-plus me-2"></i>Register</a>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat-item">
+                    <span class="hero-stat-number">3+</span>
+                    <span class="hero-stat-label">Departments</span>
+                </div>
+                <div class="hero-stat-item">
+                    <span class="hero-stat-number">20+</span>
+                    <span class="hero-stat-label">Employees</span>
+                </div>
+                <div class="hero-stat-item">
+                    <span class="hero-stat-number">95%</span>
+                    <span class="hero-stat-label">Efficiency</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="hero-shape-divider"></div>
+</section>
+
+<!-- How It Works Section -->
+<section class="container-fluid bg-light py-5">
+    <div class="container">
+        <div class="section-header text-center mb-5">
+            <span class="section-subtitle">Simple Process</span>
+            <h2 class="section-title">How It <span class="text-primary">Works</span></h2>
+            <div class="section-divider"></div>
+        </div>
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="process-timeline">
+                    <div class="process-item">
+                        <div class="process-icon">
+                            <i class="fas fa-user-plus"></i>
+                            <span class="process-number">1</span>
+                        </div>
+                        <div class="process-content">
+                            <h4>Register Account</h4>
+                            <p>Create your account with basic information and select your role.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="process-item">
+                        <div class="process-icon">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <span class="process-number">2</span>
+                        </div>
+                        <div class="process-content">
+                            <h4>Login to Dashboard</h4>
+                            <p>Access your personalized dashboard based on your role.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="process-item">
+                        <div class="process-icon">
+                            <i class="fas fa-tasks"></i>
+                            <span class="process-number">3</span>
+                        </div>
+                        <div class="process-content">
+                            <h4>Manage Your Tasks</h4>
+                            <p>Track attendance, apply for leave, or manage employees.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="process-item">
+                        <div class="process-icon">
+                            <i class="fas fa-chart-pie"></i>
+                            <span class="process-number">4</span>
+                        </div>
+                        <div class="process-content">
+                            <h4>View Analytics</h4>
+                            <p>Get insights and reports on performance and activities.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="container py-5">
+    <div class="section-header text-center mb-5">
+        <span class="section-subtitle">What People Say</span>
+        <h2 class="section-title">Client <span class="text-primary">Testimonials</span></h2>
+        <div class="section-divider"></div>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card testimonial-card">
+                <div class="testimonial-avatar">
+                    <img src="https://randomuser.me/api/portraits/women/32.jpg" alt="Testimonial Avatar">
+                </div>
+                <div class="testimonial-content">
+                    <div class="testimonial-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="testimonial-text">"EMSPro has transformed how we manage our team. The attendance tracking and leave management features have saved us countless hours."</p>
+                    <div class="testimonial-author">
+                        <h5>Sarah Johnson</h5>
+                        <p>HR Manager, TechCorp</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card testimonial-card">
+                <div class="testimonial-avatar">
+                    <img src="https://randomuser.me/api/portraits/men/46.jpg" alt="Testimonial Avatar">
+                </div>
+                <div class="testimonial-content">
+                    <div class="testimonial-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                    </div>
+                    <p class="testimonial-text">"The analytics and reporting features have given us valuable insights into our team's performance. Highly recommended for growing businesses."</p>
+                    <div class="testimonial-author">
+                        <h5>Michael Chen</h5>
+                        <p>CEO, Innovate Inc.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card testimonial-card">
+                <div class="testimonial-avatar">
+                    <img src="https://randomuser.me/api/portraits/women/65.jpg" alt="Testimonial Avatar">
+                </div>
+                <div class="testimonial-content">
+                    <div class="testimonial-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="testimonial-text">"The user interface is intuitive and our employees adapted to it quickly. The support team is also very responsive to our questions."</p>
+                    <div class="testimonial-author">
+                        <h5>Amanda Rodriguez</h5>
+                        <p>Operations Director, Global Services</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section py-5">
+    <div class="container text-center">
+        <h2 class="cta-title">Ready to Transform Your Workplace?</h2>
+        <p class="cta-subtitle">Join thousands of companies already using EMSPro</p>
+        <div class="cta-buttons mt-4">
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg shadow-hover me-3"><i class="fas fa-rocket me-2"></i>Get Started Now</a>
+            <a href="#" class="btn btn-outline-light btn-lg shadow-hover"><i class="fas fa-headset me-2"></i>Contact Sales</a>
+        </div>
+        <div class="cta-features mt-5">
+            <div class="row justify-content-center g-4">
+                <div class="col-md-3 col-6">
+                    <div class="cta-feature-item">
+                        <i class="fas fa-lock"></i>
+                        <h5>Secure & Reliable</h5>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="cta-feature-item">
+                        <i class="fas fa-sync-alt"></i>
+                        <h5>Regular Updates</h5>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="cta-feature-item">
+                        <i class="fas fa-headset"></i>
+                        <h5>24/7 Support</h5>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="cta-feature-item">
+                        <i class="fas fa-mobile-alt"></i>
+                        <h5>Mobile Friendly</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="container my-5 py-5">
+    <div class="section-header text-center mb-5">
+        <span class="section-subtitle">Our Features</span>
+        <h2 class="section-title">Why Choose <span class="text-primary">EMSPro</span>?</h2>
+        <div class="section-divider"></div>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h3 class="feature-title">Attendance Tracking</h3>
+                <p class="feature-description">Easily track employee attendance with our intuitive system. No more paperwork or manual entries.</p>
+                <div class="feature-hover-content">
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check-circle"></i> Real-time tracking</li>
+                        <li><i class="fas fa-check-circle"></i> Multiple check-in options</li>
+                        <li><i class="fas fa-check-circle"></i> Automated reports</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <h3 class="feature-title">Leave Management</h3>
+                <p class="feature-description">Streamline leave applications and approvals with our automated workflow system.</p>
+                <div class="feature-hover-content">
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check-circle"></i> Multiple leave types</li>
+                        <li><i class="fas fa-check-circle"></i> Approval workflows</li>
+                        <li><i class="fas fa-check-circle"></i> Leave balance tracking</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3 class="feature-title">Performance Analytics</h3>
+                <p class="feature-description">Get insights into employee performance with comprehensive analytics and reports.</p>
+                <div class="feature-hover-content">
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check-circle"></i> Custom dashboards</li>
+                        <li><i class="fas fa-check-circle"></i> Performance metrics</li>
+                        <li><i class="fas fa-check-circle"></i> Export capabilities</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Employee Directory -->
+<section class="container my-5">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">Employee Directory</h2>
+            <div class="form-group mb-0">
+                <input type="text" id="employeeSearch" class="form-control" placeholder="Search employees...">
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Department</th>
+                            <th>Join Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for emp in employees %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar me-3 bg-primary rounded-circle text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        {{ emp.name[0] | upper }}
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">{{ emp.name }}</h6>
+                                        <small class="text-muted">{{ emp.email }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ emp.department }}</td>
+                            <td>{{ emp.join_date }}</td>
+                            <td>
+                                <span class="badge bg-success">Active</span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4">
+                                <div class="py-5">
+                                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                    <h5>No employees to display</h5>
+                                    <p class="text-muted">Employee information will appear here</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Company Stats -->
+<section class="container my-5">
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="stat-card primary">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-value">{{ employees|length if employees else 0 }}</div>
+                <div class="stat-label">Total Employees</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card success">
+                <div class="stat-icon">
+                    <i class="fas fa-building"></i>
+                </div>
+                <div class="stat-value">5</div>
+                <div class="stat-label">Departments</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card warning">
+                <div class="stat-icon">
+                    <i class="fas fa-project-diagram"></i>
+                </div>
+                <div class="stat-value">12</div>
+                <div class="stat-label">Active Projects</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card info">
+                <div class="stat-icon">
+                    <i class="fas fa-award"></i>
+                </div>
+                <div class="stat-value">98%</div>
+                <div class="stat-label">Satisfaction Rate</div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Simple search functionality for employee table
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('employeeSearch');
+        if (searchInput) {
+            searchInput.addEventListener('keyup', function() {
+                const searchValue = this.value.toLowerCase();
+                const tableRows = document.querySelectorAll('tbody tr');
+                
+                tableRows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    if (text.includes(searchValue)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}
