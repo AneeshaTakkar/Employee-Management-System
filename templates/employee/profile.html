@@ -32,7 +32,7 @@
         </div>
 
         <div class="col-lg-8">
-            <div class="card shadow-sm h-100">
+            <div class="card shadow-sm mb-4">
                 <div class="card-header">
                     <h4 class="mb-0">Employee Information</h4>
                 </div>
@@ -98,6 +98,28 @@
                     </div>
                 </div>
             </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Register Your Face</h5>
+                </div>
+                <div class="card-body">
+                    <p>Use your webcam to register your face for attendance recognition.</p>
+                    <div class="d-grid gap-2 mb-3">
+                        <button id="start-self-webcam" class="btn btn-outline-primary">
+                            <i class="fas fa-video me-2"></i> Start Webcam
+                        </button>
+                        <button id="capture-self-face" class="btn btn-success" disabled>
+                            <i class="fas fa-camera me-2"></i> Capture & Register My Face
+                        </button>
+                    </div>
+                    <div class="mb-3">
+                        <video id="video-self" width="100%" autoplay playsinline style="display:none"></video>
+                        <canvas id="canvas-self" style="display:none"></canvas>
+                        <div id="self-register-result" class="mt-2 text-muted small"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -139,4 +161,74 @@
         font-size: 1rem;
     }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+    const startSelfWebcamBtn = document.getElementById('start-self-webcam');
+    const captureSelfFaceBtn = document.getElementById('capture-self-face');
+    const videoSelf = document.getElementById('video-self');
+    const canvasSelf = document.getElementById('canvas-self');
+    const selfRegisterResult = document.getElementById('self-register-result');
+
+    if (startSelfWebcamBtn && captureSelfFaceBtn) {
+        let selfStream = null;
+
+        startSelfWebcamBtn.addEventListener('click', async () => {
+            try {
+                selfStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                videoSelf.srcObject = selfStream;
+                videoSelf.style.display = 'block';
+                captureSelfFaceBtn.disabled = false;
+            } catch (err) {
+                selfRegisterResult.textContent = 'Error starting webcam: ' + err.message;
+                selfRegisterResult.classList.remove('text-muted');
+                selfRegisterResult.classList.add('text-danger');
+            }
+        });
+
+        captureSelfFaceBtn.addEventListener('click', async () => {
+            if (!selfStream) { 
+                selfRegisterResult.textContent = 'Please start webcam first.'; 
+                selfRegisterResult.classList.remove('text-muted');
+                selfRegisterResult.classList.add('text-danger');
+                return; 
+            }
+            const width = videoSelf.videoWidth || 640;
+            const height = videoSelf.videoHeight || 480;
+            canvasSelf.width = width;
+            canvasSelf.height = height;
+            const ctx = canvasSelf.getContext('2d');
+            ctx.drawImage(videoSelf, 0, 0, width, height);
+            const dataUrl = canvasSelf.toDataURL('image/jpeg');
+
+            try {
+                const res = await fetch('{{ url_for('ai.register_own_face_api') }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: dataUrl })
+                });
+                const json = await res.json();
+                if (json.success) {
+                    selfRegisterResult.textContent = 'Success! ' + json.message;
+                    selfRegisterResult.classList.remove('text-muted', 'text-danger');
+                    selfRegisterResult.classList.add('text-success');
+                    try { selfStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+                    videoSelf.style.display = 'none';
+                    captureSelfFaceBtn.disabled = true;
+                } else {
+                    selfRegisterResult.textContent = 'Error: ' + json.message;
+                    selfRegisterResult.classList.remove('text-muted', 'text-success');
+                    selfRegisterResult.classList.add('text-danger');
+                }
+            } catch (e) {
+                selfRegisterResult.textContent = 'Request failed: ' + e.message;
+                selfRegisterResult.classList.remove('text-muted', 'text-success');
+                selfRegisterResult.classList.add('text-danger');
+            }
+        });
+    }
+})();
+</script>
 {% endblock %}

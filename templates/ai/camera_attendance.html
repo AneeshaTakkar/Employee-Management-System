@@ -55,23 +55,52 @@
                     <h5 class="mb-0">Register Face</h5>
                 </div>
                 <div class="card-body">
-                    <p>Upload an employee's photo to register their face for recognition.</p>
+                    <p>Use your webcam to register an employee's face for recognition.</p>
+                    
+                    <div class="mb-3">
+                        <label for="employee_id_register" class="form-label">Employee</label>
+                        <select class="form-control" id="employee_id_register" name="employee_id" required>
+                            <option value="">-- Select Employee --</option>
+                            {% for emp in employees %}
+                            <option value="{{ emp._id }}">{{ emp.name }} ({{ emp.email }})</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Select an employee from the list</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 mb-3">
+                        <button id="start-webcam-register" class="btn btn-outline-secondary" {% if not fr_available %}disabled{% endif %}>
+                            <i class="fas fa-video me-2"></i> Start Webcam
+                        </button>
+                        <button id="capture-register" class="btn btn-success" disabled>
+                            <i class="fas fa-camera me-2"></i> Capture & Register
+                        </button>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <video id="video-register" width="100%" autoplay playsinline style="display:none"></video>
+                        <canvas id="canvas-register" style="display:none"></canvas>
+                        <div id="register-result" class="mt-2 text-muted small"></div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <p class="small text-muted">Or upload an image file:</p>
                     
                     <form method="POST" action="{{ url_for('ai.camera_attendance') }}" enctype="multipart/form-data">
                         <div class="mb-3">
-                            <label for="employee_id" class="form-label">Employee ID</label>
-                            <input type="text" class="form-control" id="employee_id" name="employee_id" required>
-                            <div class="form-text">Enter the MongoDB ObjectID of the employee</div>
+                            <select class="form-control" name="employee_id" required>
+                                <option value="">-- Select Employee --</option>
+                                {% for emp in employees %}
+                                <option value="{{ emp._id }}">{{ emp.name }} ({{ emp.email }})</option>
+                                {% endfor %}
+                            </select>
                         </div>
-                        
                         <div class="mb-3">
-                            <label for="face_image" class="form-label">Face Image</label>
-                            <input type="file" class="form-control" id="face_image" name="face_image" accept="image/*" required>
-                            <div class="form-text">Upload a clear front-facing photo</div>
+                            <input type="file" class="form-control" name="face_image" accept="image/*" required>
                         </div>
-                        
                         <button type="submit" name="upload" class="btn btn-secondary w-100">
-                            <i class="fas fa-upload me-2"></i> Register Face
+                            <i class="fas fa-upload me-2"></i> Register Face via File
                         </button>
                     </form>
                 </div>
@@ -127,96 +156,161 @@
     const resultDiv = document.getElementById('api-result');
     const frAvailable = {{ 'true' if fr_available else 'false' }};
 
-    if (!startBtn || !snapBtn) return;
+    if (startBtn && snapBtn) {
+        let stream = null;
 
-    let stream = null;
-
-    startBtn.addEventListener('click', async () => {
-        if (!frAvailable) { resultDiv.textContent = 'Face recognition is not available in the server environment.'; return; }
-        try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            video.srcObject = stream;
-            video.style.display = 'block';
-            snapBtn.disabled = false;
-        } catch (err) {
-            resultDiv.textContent = 'Error starting webcam: ' + err.message;
-        }
-    });
-
-    // Auto mode: intercept form submit and capture frames until recognized
-    if (startAutoBtn) {
-        startAutoBtn.addEventListener('click', async (e) => {
-            if (!frAvailable) return;
-            e.preventDefault();
+        startBtn.addEventListener('click', async () => {
+            if (!frAvailable) { resultDiv.textContent = 'Face recognition is not available in the server environment.'; return; }
             try {
                 stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 video.srcObject = stream;
                 video.style.display = 'block';
-                resultDiv.textContent = 'Starting auto capture...';
-
-                const sendFrame = async () => {
-                    const width = video.videoWidth || 640;
-                    const height = video.videoHeight || 480;
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(video, 0, 0, width, height);
-                    const dataUrl = canvas.toDataURL('image/jpeg');
-                    const res = await fetch('{{ url_for('ai.camera_attendance_api') }}', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ image: dataUrl })
-                    });
-                    const json = await res.json();
-                    if (json.success && json.details && json.details.count > 0) {
-                        resultDiv.textContent = json.message + ' | ' + JSON.stringify(json.details.recognized);
-                        try { stream.getTracks().forEach(t => t.stop()); } catch (e) {}
-                        video.style.display = 'none';
-                        return true;
-                    } else {
-                        resultDiv.textContent = 'Scanning... ' + (json.message || '');
-                        return false;
-                    }
-                };
-
-                // Try up to 10 frames, 1 per second
-                for (let i = 0; i < 10; i++) {
-                    const done = await sendFrame();
-                    if (done) break;
-                    await new Promise(r => setTimeout(r, 1000));
-                }
+                snapBtn.disabled = false;
             } catch (err) {
-                resultDiv.textContent = 'Auto capture failed: ' + err.message;
+                resultDiv.textContent = 'Error starting webcam: ' + err.message;
+            }
+        });
+
+        // Auto mode: intercept form submit and capture frames until recognized
+        if (startAutoBtn) {
+            startAutoBtn.addEventListener('click', async (e) => {
+                if (!frAvailable) return;
+                e.preventDefault();
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    video.srcObject = stream;
+                    video.style.display = 'block';
+                    resultDiv.textContent = 'Starting auto capture...';
+
+                    const sendFrame = async () => {
+                        const width = video.videoWidth || 640;
+                        const height = video.videoHeight || 480;
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(video, 0, 0, width, height);
+                        const dataUrl = canvas.toDataURL('image/jpeg');
+                        const res = await fetch('{{ url_for('ai.camera_attendance_api') }}', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ image: dataUrl })
+                        });
+                        const json = await res.json();
+                        if (json.success && json.details && json.details.count > 0) {
+                            resultDiv.textContent = json.message + ' | ' + JSON.stringify(json.details.recognized);
+                            try { stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+                            video.style.display = 'none';
+                            return true;
+                        } else {
+                            resultDiv.textContent = 'Scanning... ' + (json.message || '');
+                            return false;
+                        }
+                    };
+
+                    // Try up to 10 frames, 1 per second
+                    for (let i = 0; i < 10; i++) {
+                        const done = await sendFrame();
+                        if (done) break;
+                        await new Promise(r => setTimeout(r, 1000));
+                    }
+                } catch (err) {
+                    resultDiv.textContent = 'Auto capture failed: ' + err.message;
+                }
+            });
+        }
+
+        snapBtn.addEventListener('click', async () => {
+            if (!stream) { resultDiv.textContent = 'Please start webcam first.'; return; }
+            const width = video.videoWidth || 640;
+            const height = video.videoHeight || 480;
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, width, height);
+            const dataUrl = canvas.toDataURL('image/jpeg');
+
+            try {
+                const res = await fetch('{{ url_for('ai.camera_attendance_api') }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: dataUrl })
+                });
+                const json = await res.json();
+                if (json.success) {
+                    resultDiv.textContent = json.message + (json.details && json.details.recognized ? ' | ' + JSON.stringify(json.details.recognized) : '');
+                } else {
+                    resultDiv.textContent = 'Error: ' + json.message;
+                }
+            } catch (e) {
+                resultDiv.textContent = 'Request failed: ' + e.message;
             }
         });
     }
 
-    snapBtn.addEventListener('click', async () => {
-        if (!stream) { resultDiv.textContent = 'Please start webcam first.'; return; }
-        const width = video.videoWidth || 640;
-        const height = video.videoHeight || 480;
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, width, height);
-        const dataUrl = canvas.toDataURL('image/jpeg');
+    // Registration functionality
+    const startRegisterBtn = document.getElementById('start-webcam-register');
+    const captureRegisterBtn = document.getElementById('capture-register');
+    const videoRegister = document.getElementById('video-register');
+    const canvasRegister = document.getElementById('canvas-register');
+    const registerResult = document.getElementById('register-result');
+    const employeeIdSelect = document.getElementById('employee_id_register');
 
-        try {
-            const res = await fetch('{{ url_for('ai.camera_attendance_api') }}', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image: dataUrl })
-            });
-            const json = await res.json();
-            if (json.success) {
-                resultDiv.textContent = json.message + (json.details && json.details.recognized ? ' | ' + JSON.stringify(json.details.recognized) : '');
-            } else {
-                resultDiv.textContent = 'Error: ' + json.message;
+    if (startRegisterBtn && captureRegisterBtn) {
+        let registerStream = null;
+
+        startRegisterBtn.addEventListener('click', async () => {
+            if (!frAvailable) { registerResult.textContent = 'Face recognition is not available in the server environment.'; return; }
+            try {
+                registerStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                videoRegister.srcObject = registerStream;
+                videoRegister.style.display = 'block';
+                captureRegisterBtn.disabled = false;
+            } catch (err) {
+                registerResult.textContent = 'Error starting webcam: ' + err.message;
             }
-        } catch (e) {
-            resultDiv.textContent = 'Request failed: ' + e.message;
-        }
-    });
+        });
+
+        captureRegisterBtn.addEventListener('click', async () => {
+            if (!registerStream) { registerResult.textContent = 'Please start webcam first.'; return; }
+            const employeeId = employeeIdSelect.value;
+            if (!employeeId) {
+                registerResult.textContent = 'Please select an employee first.';
+                return;
+            }
+            const width = videoRegister.videoWidth || 640;
+            const height = videoRegister.videoHeight || 480;
+            canvasRegister.width = width;
+            canvasRegister.height = height;
+            const ctx = canvasRegister.getContext('2d');
+            ctx.drawImage(videoRegister, 0, 0, width, height);
+            const dataUrl = canvasRegister.toDataURL('image/jpeg');
+
+            try {
+                const res = await fetch('{{ url_for('ai.register_face_api') }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: dataUrl, employee_id: employeeId })
+                });
+                const json = await res.json();
+                if (json.success) {
+                    registerResult.textContent = 'Success! ' + json.message;
+                    registerResult.classList.remove('text-muted');
+                    registerResult.classList.add('text-success');
+                    try { registerStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+                    videoRegister.style.display = 'none';
+                    captureRegisterBtn.disabled = true;
+                } else {
+                    registerResult.textContent = 'Error: ' + json.message;
+                    registerResult.classList.remove('text-muted');
+                    registerResult.classList.add('text-danger');
+                }
+            } catch (e) {
+                registerResult.textContent = 'Request failed: ' + e.message;
+                registerResult.classList.remove('text-muted');
+                registerResult.classList.add('text-danger');
+            }
+        });
+    }
 })();
 </script>
 {% endblock %}

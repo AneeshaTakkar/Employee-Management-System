@@ -26,10 +26,10 @@ mongo = PyMongo(app)
 # Test MongoDB connection
 try:
     mongo.db.command('ping')
-    print("✅ MongoDB connected successfully!")
+    print("[OK] MongoDB connected successfully!")
     print(f"Database: {mongo.db.name}")
 except Exception as e:
-    print(f"❌ MongoDB connection failed: {e}")
+    print(f"[ERROR] MongoDB connection failed: {e}")
 
 # Make MongoDB available globally
 app.mongo = mongo

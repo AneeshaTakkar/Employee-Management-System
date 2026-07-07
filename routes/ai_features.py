@@ -15,16 +15,17 @@ ai_routes = Blueprint('ai', __name__)
 # Try to import AI models with fallbacks
 try:
     from ai_models.face_recognition_utils import recognize_faces_from_camera, encode_face, generate_sample_encodings, recognize_faces_in_image
-except ImportError:
+except ImportError as e:
     # Soft fallback: instead of hard-failing, defer to runtime import within utils and provide actionable message
+    print(f"[WARNING] Could not import face recognition utils: {e}")
     def recognize_faces_from_camera():
-        return False, "Face recognition is currently unavailable at runtime. Please ensure the server uses the correct virtual environment and that the 'face_recognition' package is installed."
+        return False, "Face recognition is currently unavailable at runtime. Please ensure the server uses the correct virtual environment and that the 'deepface' package is installed."
     def encode_face(image_path, employee_id):
-        return False, "Face encoding is currently unavailable at runtime. Please ensure the server uses the correct virtual environment and that the 'face_recognition' package is installed."
+        return False, "Face encoding is currently unavailable at runtime. Please ensure the server uses the correct virtual environment and that the 'deepface' package is installed."
     def generate_sample_encodings():
-        return False, "Sample encodings are currently unavailable at runtime. Please ensure the server uses the correct virtual environment and that the 'face_recognition' package is installed."
+        return False, "Sample encodings are currently unavailable at runtime. Please ensure the server uses the correct virtual environment and that the 'deepface' package is installed."
     def recognize_faces_in_image(_img):
-        return False, "Face recognition is currently unavailable at runtime. Please ensure the server uses the correct virtual environment and that the 'face_recognition' package is installed.", {}
+        return False, "Face recognition is currently unavailable at runtime. Please ensure the server uses the correct virtual environment and that the 'deepface' package is installed.", {}
 
 try:
     from ai_models.ml_models import predict_leave_approval, predict_attrition_risk, initialize_models
@@ -134,13 +135,13 @@ def camera_attendance():
         employees = get_all_employees()
         fr_available = False
         try:
-            import face_recognition as _fr
+            from deepface import DeepFace
             fr_available = True
         except Exception:
             fr_available = False
         return render_template('ai/camera_attendance.html', employees=employees, fr_available=fr_available)
     except Exception as e:
-        flash(f"Error loading page: {str(e)}", 'danger')
+        flash(f"Error loading page: {str(e)}", "danger")
         return render_template('ai/camera_attendance.html', employees=[], fr_available=False)
 
 # Leave Approval Prediction
@@ -324,5 +325,87 @@ def camera_attendance_api():
 
         success, message, details = recognize_faces_in_image(frame_bgr)
         return jsonify({'success': success, 'message': message, 'details': details}), 200
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error processing image: {str(e)}'}), 500
+
+
+@ai_routes.route('/register_face_api', methods=['POST'])
+@login_required('admin')
+def register_face_api():
+    """API endpoint to accept a captured image from the browser and register an employee's face."""
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'success': False, 'message': 'Invalid request: no JSON data'}), 400
+
+    image_b64 = data.get('image')
+    employee_id = data.get('employee_id')
+    if not image_b64 or not employee_id:
+        return jsonify({'success': False, 'message': 'Invalid request: image and employee_id are required'}), 400
+
+    try:
+        # Handle data URL (e.g., "data:image/jpeg;base64,....")
+        b64_part = image_b64.split(',', 1)[1] if ',' in image_b64 else image_b64
+        image_bytes = np.frombuffer(base64.b64decode(b64_part), dtype=np.uint8)
+        frame_bgr = cv2.imdecode(image_bytes, cv2.IMREAD_COLOR)
+        if frame_bgr is None:
+            return jsonify({'success': False, 'message': 'Failed to decode image'}), 400
+        
+        # Convert to RGB for face_recognition
+        import numpy as _np
+        frame_rgb = _np.ascontiguousarray(frame_bgr[:, :, ::-1])
+
+        # Save the image to static/images/employees as well
+        image_dir = os.path.join('static', 'images', 'employees')
+        os.makedirs(image_dir, exist_ok=True)
+        image_path = os.path.join(image_dir, f"{employee_id}.jpg")
+        cv2.imwrite(image_path, frame_bgr)
+
+        # Encode and save face
+        success, message = encode_face(frame_rgb, employee_id, is_array=True)
+        return jsonify({'success': success, 'message': message}), 200
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error processing image: {str(e)}'}), 500
+
+
+@ai_routes.route('/register_own_face_api', methods=['POST'])
+@login_required('employee')
+def register_own_face_api():
+    """API endpoint for employees to register their own face."""
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'success': False, 'message': 'Invalid request: no JSON data'}), 400
+
+    image_b64 = data.get('image')
+    if not image_b64:
+        return jsonify({'success': False, 'message': 'Invalid request: image is required'}), 400
+
+    try:
+        # Get current user's employee_id
+        email = session.get('user')
+        employee = get_employee_by_email(email)
+        if not employee:
+            return jsonify({'success': False, 'message': 'Employee not found'}), 404
+        employee_id = str(employee['_id'])
+
+        # Handle data URL (e.g., "data:image/jpeg;base64,....")
+        b64_part = image_b64.split(',', 1)[1] if ',' in image_b64 else image_b64
+        image_bytes = np.frombuffer(base64.b64decode(b64_part), dtype=np.uint8)
+        frame_bgr = cv2.imdecode(image_bytes, cv2.IMREAD_COLOR)
+        if frame_bgr is None:
+            return jsonify({'success': False, 'message': 'Failed to decode image'}), 400
+        
+        # Convert to RGB for face_recognition
+        import numpy as _np
+        frame_rgb = _np.ascontiguousarray(frame_bgr[:, :, ::-1])
+
+        # Save the image to static/images/employees as well
+        image_dir = os.path.join('static', 'images', 'employees')
+        os.makedirs(image_dir, exist_ok=True)
+        image_path = os.path.join(image_dir, f"{employee_id}.jpg")
+        cv2.imwrite(image_path, frame_bgr)
+
+        # Encode and save face
+        success, message = encode_face(frame_rgb, employee_id, is_array=True)
+        return jsonify({'success': success, 'message': message}), 200
     except Exception as e:
         return jsonify({'success': False, 'message': f'Error processing image: {str(e)}'}), 500
