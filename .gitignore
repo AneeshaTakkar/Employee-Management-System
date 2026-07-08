@@ -65,3 +65,6 @@ create_test_users.py
 generate_synthetic_data.py
 download_stock_images.py
 seed_pymongo.py
+
+static/images/employees/*
+!static/images/employees/.gitkeep
