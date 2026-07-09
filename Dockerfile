@@ -11,6 +11,11 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
+# DeepFace downloads model weights to $HOME/.deepface on first run.
+# Ensure HOME points somewhere writable inside the container.
+ENV HOME=/app
+RUN mkdir -p /app/.deepface/weights && chmod -R 777 /app
+
 # Install Python deps first (layer caching - faster rebuilds when only code changes)
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip
@@ -25,4 +30,6 @@ ENV PORT=7860
 
 # gunicorn serves Flask in production (app.py must have `app = Flask(__name__)`)
 # --timeout 120 because DeepFace model loading can be slow on first request
-CMD ["gunicorn", "-b", "0.0.0.0:7860", "--timeout", "120", "--workers", "1", "app:app"]
+ENV PYTHONUNBUFFERED=1
+CMD ["gunicorn", "-b", "0.0.0.0:7860", "--timeout", "300", "--workers", "1", "--log-level", "debug", "app:app"]
+
